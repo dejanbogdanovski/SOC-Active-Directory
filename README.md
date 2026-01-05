@@ -13,7 +13,7 @@ This project demonstrates the deployment of a full-scale corporate network envir
 * **Attacker Machine:** Kali Linux (Hydra)
 * **Telemetry:** Windows Security Auditing & Splunk Universal Forwarder
 
-![Lab Infrastructure](lab-infrastructure.png)
+![Lab Infrastructure](SOC%20Active%20Directory/lab-infrastructure.png)
 *Figure 1: VirtualBox Environment showing all active nodes.*
 
 ---
@@ -28,7 +28,7 @@ I established a secure network topology using a dedicated NAT Network.
 ### 2. Network Stability
 * Configured **DNS Forwarders** (8.8.8.8) on the ADDC to ensure name resolution for telemetry forwarding.
 
-![Active Directory Structure](active-directory-users.png)
+![Active Directory Structure](SOC%20Active%20Directory/active-directory-users.png)
 *Figure 2: ADUC showing the 'IT' Organizational Unit and 'jsmith' user account.*
 
 ---
@@ -40,7 +40,7 @@ To generate actionable telemetry, I performed an RDP brute-force attack from the
 * **Target:** `10.0.2.12` (Windows 10 Endpoint)
 * **Strategy:** Using a password list to attempt unauthorized entry via port 3389.
 
-![Hydra Attack Execution](hydra-attack.png)
+![Hydra Attack Execution](SOC%20Active%20Directory/hydra-attack.png)
 *Figure 3: Real-time execution of the brute force attack using Hydra on Kali Linux.*
 
 ---
@@ -52,14 +52,14 @@ The core of the project involves identifying the attack signature within **Splun
 * Identified a significant surge of **4,943 events** occurring during the attack window.
 * The histogram clearly shows the density of the automated brute force attempts.
 
-![Splunk Dashboard](splunk-detection-overview.png)
+![Splunk Dashboard](SOC%20Active%20Directory/splunk-detection-overview.png)
 *Figure 4: Splunk search results highlighting the 4,943 events detected.*
 
 ### 2. Event Log Forensics
 * **Event Code 4625/4634:** Deep-dive analysis of the security logs revealed thousands of logon failures.
 * **User Impact:** Logs confirmed the targeted account was `jsmith` on the `target-PC` host.
 
-![Event Log Analysis](event-log-analysis.png)
+![Event Log Analysis](SOC%20Active%20Directory/event-log-analysis.png)
 *Figure 5: Detailed forensic view of a failed logon event in Splunk.*
 
 ---

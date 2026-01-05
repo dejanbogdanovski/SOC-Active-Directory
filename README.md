@@ -13,6 +13,9 @@ This project demonstrates the deployment of a full-scale corporate network envir
 * **Attacker Machine:** Kali Linux (Hydra)
 * **Telemetry:** Windows Security Auditing & Splunk Universal Forwarder
 
+![Lab Infrastructure](lab-infrastructure.png)
+*Figure 1: VirtualBox Environment showing all active nodes.*
+
 ---
 
 ## 🏗️ Phase 1: Infrastructure & Active Directory Setup
@@ -20,13 +23,13 @@ I established a secure network topology using a dedicated NAT Network.
 
 ### 1. Identity & Directory Management
 * Configured the `mydfir.local` domain and established a structured **Organizational Unit (OU)** hierarchy (IT, HR, Users).
-* Created a domain user **"Jenny Smith"** (`jsmith`) to simulate a corporate identity targeted by attackers.
+* Created a domain user **"Jenny Smith"** (`jsmith`) to simulate a corporate identity.
 
 ### 2. Network Stability
-* Configured **DNS Forwarders** (8.8.8.8) on the ADDC to ensure name resolution for external telemetry forwarding.
+* Configured **DNS Forwarders** (8.8.8.8) on the ADDC to ensure name resolution for telemetry forwarding.
 
-![Active Directory Structure](2.png)
-*Figure 1: ADUC showing the 'IT' Organizational Unit and 'jsmith' user account.*
+![Active Directory Structure](active-directory-users.png)
+*Figure 2: ADUC showing the 'IT' Organizational Unit and 'jsmith' user account.*
 
 ---
 
@@ -35,10 +38,10 @@ To generate actionable telemetry, I performed an RDP brute-force attack from the
 
 * **Tool:** Hydra v9.6
 * **Target:** `10.0.2.12` (Windows 10 Endpoint)
-* **Strategy:** Using a password list (`passwords.txt`) to attempt unauthorized entry via port 3389.
+* **Strategy:** Using a password list to attempt unauthorized entry via port 3389.
 
-![Hydra Attack Execution](4.jpg)
-*Figure 2: Real-time execution of the brute force attack using Hydra on Kali Linux.*
+![Hydra Attack Execution](hydra-attack.png)
+*Figure 3: Real-time execution of the brute force attack using Hydra on Kali Linux.*
 
 ---
 
@@ -46,19 +49,22 @@ To generate actionable telemetry, I performed an RDP brute-force attack from the
 The core of the project involves identifying the attack signature within **Splunk**.
 
 ### 1. Traffic Analysis & Spikes
-* By analyzing the logs over "All Time," I identified a significant surge of **4,943 events** occurring during the attack window.
+* Identified a significant surge of **4,943 events** occurring during the attack window.
 * The histogram clearly shows the density of the automated brute force attempts.
+
+![Splunk Dashboard](splunk-detection-overview.png)
+*Figure 4: Splunk search results highlighting the 4,943 events detected.*
 
 ### 2. Event Log Forensics
 * **Event Code 4625/4634:** Deep-dive analysis of the security logs revealed thousands of logon failures.
-* **User Impact:** The logs explicitly confirmed the targeted account was `jsmith` on the `target-PC` host, stemming from the attacker's IP.
+* **User Impact:** Logs confirmed the targeted account was `jsmith` on the `target-PC` host.
 
-![Splunk Dashboard](5.png)
-*Figure 3: Splunk search results highlighting the 4,943 events detected during the analysis.*
+![Event Log Analysis](event-log-analysis.png)
+*Figure 5: Detailed forensic view of a failed logon event in Splunk.*
 
 ---
 
 ## 🎯 Key Takeaways
-1. **Auditing is Crucial:** Without **Advanced Audit Policy** (GPO) configuration, these 4,000+ login attempts would have been invisible to the SIEM.
-2. **SIEM Correlation:** Splunk successfully ingested telemetry from the **Universal Forwarder**, allowing for real-time visibility into endpoint security.
-3. **Attack Patterns:** The data clearly distinguishes between a manual login mistake and a scripted automated attack.
+1. **Auditing is Crucial:** Without **Advanced Audit Policy** configuration, these 4,000+ login attempts would have been invisible.
+2. **SIEM Integration:** Splunk successfully ingested telemetry from the **Universal Forwarder**, providing real-time visibility.
+3. **Defense in Depth:** This lab demonstrates how monitoring account activity can reveal automated threats.

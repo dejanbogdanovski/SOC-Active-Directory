@@ -1,50 +1,64 @@
-🛡️ Active Directory & SOC Detection Lab
-📖 Project Overview
-This project demonstrates the deployment of a full-scale corporate network environment within a virtualized infrastructure. The goal was to simulate a real-world Brute Force attack and perform a deep-dive analysis using Splunk (SIEM) to detect and investigate security incidents.
+# 🛡️ Active Directory & SOC Detection Lab
 
-🛠️ Lab Components & Tools
-Virtualization: Oracle VirtualBox.
+## 📖 Project Overview
+This project demonstrates the deployment of a full-scale corporate network environment within a virtualized infrastructure. The goal was to simulate a real-world **RDP Brute Force attack** and perform deep-dive analysis using **Splunk (SIEM)** to detect and investigate security incidents.
 
-SIEM: Splunk Enterprise (Ubuntu 64-bit).
+---
 
-Domain Controller: Windows Server 2022 (ADDC).
+## 🛠️ Lab Components & Tools
+* **Virtualization:** Oracle VirtualBox (Running 4 machines)
+* **SIEM:** Splunk Enterprise (Ubuntu 64-bit)
+* **Domain Controller:** Windows Server 2022 (ADDC)
+* **Endpoint:** Windows 10 (Target-PC)
+* **Attacker Machine:** Kali Linux (Hydra)
+* **Telemetry:** Windows Security Auditing & Splunk Universal Forwarder
 
-Endpoint: Windows 10 (Target-PC).
+---
 
-Attacker Machine: Kali Linux (Hydra).
+## 🏗️ Phase 1: Infrastructure & Active Directory Setup
+I established a secure network topology using a dedicated NAT Network.
 
-Telemetry: Windows Security Logs & Universal Forwarder.
+### 1. Identity & Directory Management
+* Configured the `mydfir.local` domain and established a structured **Organizational Unit (OU)** hierarchy (IT, HR, Users).
+* Created a domain user **"Jenny Smith"** (`jsmith`) to simulate a corporate identity targeted by attackers.
 
-🏗️ Phase 1: Infrastructure & Active Directory Setup
-I built a secure network topology where all machines reside within a dedicated NAT Network.
+### 2. Network Stability
+* Configured **DNS Forwarders** (8.8.8.8) on the ADDC to ensure name resolution for external telemetry forwarding.
 
-Active Directory Configuration: I configured the mydfir.local domain and established an Organizational Unit (OU) structure (IT, HR, Users).
+![Active Directory Structure](2.png)
+*Figure 1: ADUC showing the 'IT' Organizational Unit and 'jsmith' user account.*
 
-Identity Management: Created a domain user "Jenny Smith" (jsmith) to simulate a typical corporate employee identity.
+---
 
-Network Services: Configured DNS Forwarders (8.8.8.8) on the ADDC to ensure stable name resolution and external connectivity for telemetry forwarding.
+## ⚔️ Phase 2: Simulating the Attack (RDP Brute Force)
+To generate actionable telemetry, I performed an RDP brute-force attack from the Kali Linux machine.
 
-⚔️ Phase 2: Simulating the Attack (RDP Brute Force)
-To test the detection capabilities, I performed a credential-stuffing attack from the Kali Linux machine.
+* **Tool:** Hydra v9.6
+* **Target:** `10.0.2.12` (Windows 10 Endpoint)
+* **Strategy:** Using a password list (`passwords.txt`) to attempt unauthorized entry via port 3389.
 
-Tool: Hydra.
+![Hydra Attack Execution](4.jpg)
+*Figure 2: Real-time execution of the brute force attack using Hydra on Kali Linux.*
 
-Command: hydra -l jsmith -P passwords.txt 10.0.2.12 rdp.
+---
 
-Execution: The attack targeted the Windows 10 endpoint, attempting multiple password combinations against the RDP service.
+## 🔍 Phase 3: SOC Analysis & Detection
+The core of the project involves identifying the attack signature within **Splunk**.
 
-🔍 Phase 3: SOC Analysis & Detection
-The core of the project involves monitoring the generated telemetry in Splunk.
+### 1. Traffic Analysis & Spikes
+* By analyzing the logs over "All Time," I identified a significant surge of **4,943 events** occurring during the attack window.
+* The histogram clearly shows the density of the automated brute force attempts.
 
-Event Correlation: By switching the time range to "All Time," I identified a massive spike of 4,943 events related to the user jsmith.
+### 2. Event Log Forensics
+* **Event Code 4625/4634:** Deep-dive analysis of the security logs revealed thousands of logon failures.
+* **User Impact:** The logs explicitly confirmed the targeted account was `jsmith` on the `target-PC` host, stemming from the attacker's IP.
 
-Log Investigation: Deep analysis of the security logs revealed Event Code 4634/4625 (Logon Failures/Logoffs).
+![Splunk Dashboard](5.png)
+*Figure 3: Splunk search results highlighting the 4,943 events detected during the analysis.*
 
-Forensic Findings: The logs explicitly show the targeted account jsmith on the TARGET-PC, providing clear evidence of the brute force attempt.
+---
 
-🎯 Key Takeaways
-Visibility is Key: Without proper Group Policy (GPO) auditing, these 4,000+ attempts would have gone unnoticed.
-
-SIEM Integration: Splunk effectively correlated the distributed logs from the Windows endpoint into a readable timeline of the attack.
-
-Defense in Depth: This lab highlights the importance of monitoring account lockout events as a primary defense against automated attacks.
+## 🎯 Key Takeaways
+1. **Auditing is Crucial:** Without **Advanced Audit Policy** (GPO) configuration, these 4,000+ login attempts would have been invisible to the SIEM.
+2. **SIEM Correlation:** Splunk successfully ingested telemetry from the **Universal Forwarder**, allowing for real-time visibility into endpoint security.
+3. **Attack Patterns:** The data clearly distinguishes between a manual login mistake and a scripted automated attack.
